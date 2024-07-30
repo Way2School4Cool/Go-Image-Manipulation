@@ -20,7 +20,7 @@ func main() {
         log.Fatal("No filenames given")
     }
 
-    fmt.Printf("Input: %s\nOutput: %s", inputFilename, outputFilename)
+    fmt.Printf("Input: %s\nOutput: %s\n", inputFilename, outputFilename)
 
     GreyscaleManipulate(inputFilename, outputFilename)
 }
