@@ -1,32 +1,64 @@
 package main
 
 import (
-    "fmt"
+	"fmt"
 	"image/color"
 	"image/png"
 	"log"
 	"os"
-    "strings" 
+	"strings"
+	"time"
 )
 
 // arg 0 == the exe?
-// arg 1 == file input name
-// arg 2 == file output name
+// arg 1 == Option for manip
+// arg 2 == File Input name
+// arg 3 == File Output name
 func main() {
-    var inputFilename string = os.Args[1]
-    var outputFilename string = os.Args[2]
+    start := time.Now()
+    var checkpoint time.Time
+
+    option := os.Args[1]
+    inputFilename := os.Args[2]
+    outputFilename := os.Args[3]
 
     if (inputFilename == "" || outputFilename == "") {
         log.Fatal("No filenames given")
     }
 
-    fmt.Printf("Input: %s\nOutput: %s\n", inputFilename, outputFilename)
+    switch option {
+    case "g":
+        //fmt.Printf("Input: %s\nOutput: %s\n", inputFilename, outputFilename)
+        grayArray := GreyscaleManipulate(inputFilename)
 
-    GreyscaleManipulate(inputFilename, outputFilename)
+        checkpoint = time.Now()
+        fmt.Printf("Generated Array in: %v\n", checkpoint.Sub(start))
+
+        saveToTextFile(grayArray, outputFilename)
+
+        checkpoint = time.Now()
+        fmt.Printf("Saved to file in: %v\n", checkpoint.Sub(start))
+    
+    // case "?":
+    //     redshift(inputFilename, outputFilename)
+    
+    default:
+        helpMenu()
+
+    }
 }
 
-func GreyscaleManipulate(inputFilename, outputFilename string) {
+func helpMenu() {
+    menu := []string{
+        "",
+        "Menu:",
+        "g - Greyscale (returns a txt of the greyscaled image)",
+        "",
+    }
+    log.Fatal(strings.Join(menu, "\n"))
+}
 
+func GreyscaleManipulate(inputFilename string) []string {
     // Initialize
     levels := []string{" ", "░", "▒", "▓", "█"}
     messyArray := make([]string, 0)
@@ -63,8 +95,35 @@ func GreyscaleManipulate(inputFilename, outputFilename string) {
         messyArray = append(messyArray, "\n")
     }
 
-    saveToTextFile(messyArray, outputFilename)
+    return messyArray
 }
+
+// func redshift(inputFilename, outputFilename string) {
+//     // Attempt to open the image
+//     file, err := os.Open(inputFilename)
+//     if err != nil {
+//         log.Fatal(err)
+//     }
+//
+//     defer file.Close()
+//
+//     // Decode image
+//     img, err := png.Decode(file)
+//     if err != nil {
+//         log.Fatal(err)
+//     }
+//
+//     newImg := img
+//
+//     // Loop through image line by line
+//     for y := img.Bounds().Min.Y; y < img.Bounds().Max.Y; y++ {
+//         for x := img.Bounds().Min.X; x < img.Bounds().Max.X; x++ {
+//             rgba := color.RGBAModel.Convert(img.At(x, y)).(color.RGBA)
+//             rgba = color.RGBA{rgba.R, rgba.G, rgba.B, rgba.A}
+//             newImg.At(x,y) = color.NRGBA(rgba)
+//         }
+//     }
+// }
 
 func saveToTextFile(dataToSave []string, outputFilename string) {
     var messyString string = ""
