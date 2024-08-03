@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"image"
 	"image/color"
 	"image/png"
 	"log"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -15,6 +17,7 @@ import (
 // arg 2 == File Input name
 // arg 3 == File Output name
 func main() {
+    println(runtime.NumCPU())
     start := time.Now()
     var checkpoint time.Time
 
@@ -28,27 +31,34 @@ func main() {
 
     switch option {
     case "g":
-        //fmt.Printf("Input: %s\nOutput: %s\n", inputFilename, outputFilename)
         grayArray := GreyscaleManipulate(inputFilename)
 
         checkpoint = time.Now()
         fmt.Printf("Generated Array in: %v\n", checkpoint.Sub(start))
 
-        saveToTextFile(grayArray, outputFilename)
+        SaveToTextFile(grayArray, outputFilename)
 
         checkpoint = time.Now()
         fmt.Printf("Saved to file in: %v\n", checkpoint.Sub(start))
     
-    // case "?":
-    //     redshift(inputFilename, outputFilename)
-    
+    case "r":
+        redImage := Redshift(inputFilename)
+       
+        checkpoint = time.Now()
+        fmt.Printf("Generated Array in: %v\n", checkpoint.Sub(start))
+
+        SaveToPDFFile(redImage, outputFilename)
+
+        checkpoint = time.Now()
+        fmt.Printf("Saved to file in: %v\n", checkpoint.Sub(start))
+
     default:
-        helpMenu()
+        HelpMenu()
 
     }
 }
 
-func helpMenu() {
+func HelpMenu() {
     menu := []string{
         "",
         "Menu:",
@@ -76,6 +86,8 @@ func GreyscaleManipulate(inputFilename string) []string {
     if err != nil {
         log.Fatal(err)
     }
+
+    fmt.Println(img)
  
     // Loop through image line by line
     for y := img.Bounds().Min.Y; y < img.Bounds().Max.Y; y++ {
@@ -94,38 +106,59 @@ func GreyscaleManipulate(inputFilename string) []string {
         // If it is a new line, add that to the array too
         messyArray = append(messyArray, "\n")
     }
-
+    
     return messyArray
 }
 
-// func redshift(inputFilename, outputFilename string) {
-//     // Attempt to open the image
-//     file, err := os.Open(inputFilename)
-//     if err != nil {
-//         log.Fatal(err)
-//     }
-//
-//     defer file.Close()
-//
-//     // Decode image
-//     img, err := png.Decode(file)
-//     if err != nil {
-//         log.Fatal(err)
-//     }
-//
-//     newImg := img
-//
-//     // Loop through image line by line
-//     for y := img.Bounds().Min.Y; y < img.Bounds().Max.Y; y++ {
-//         for x := img.Bounds().Min.X; x < img.Bounds().Max.X; x++ {
-//             rgba := color.RGBAModel.Convert(img.At(x, y)).(color.RGBA)
-//             rgba = color.RGBA{rgba.R, rgba.G, rgba.B, rgba.A}
-//             newImg.At(x,y) = color.NRGBA(rgba)
-//         }
-//     }
-// }
+func Redshift(inputFilename string) image.Image {
+    // Attempt to open the image
+    file, err := os.Open(inputFilename)
+    if err != nil {
+        log.Fatal(err)
+    }
 
-func saveToTextFile(dataToSave []string, outputFilename string) {
+    defer file.Close()
+
+    // Decode image
+    img, err := png.Decode(file)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    newImg := image.NewRGBA(img.Bounds())
+
+    // Loop through image line by line
+    for y := img.Bounds().Min.Y; y < img.Bounds().Max.Y; y++ {
+        for x := img.Bounds().Min.X; x < img.Bounds().Max.X; x++ {
+            origColor := img.At(x, y)
+            red, green, blue, alpha := origColor.RGBA() 
+            
+            newColor := color.RGBA{
+                R: uint8(OverflowCheck((red + 50), 0,  255)),
+                G: uint8(green),
+                B: uint8(blue),
+                A: uint8(alpha),
+            }
+
+            newImg.Set(x, y, newColor)
+            // rgba = color.RGBA{rgba.R, rgba.G, rgba.B, rgba.A}
+            //newImg.At(x,y) = color.NRGBA(rgba)
+        }
+    }
+
+    return newImg
+}
+
+func OverflowCheck(value, min, max uint32) uint32 {
+    if value < min {
+        return min
+    } else if value > max {
+        return max
+    }
+    return value
+}
+
+func SaveToTextFile(dataToSave []string, outputFilename string) {
     var messyString string = ""
     messyString = messyString + strings.Join(dataToSave, "")
 
@@ -135,3 +168,16 @@ func saveToTextFile(dataToSave []string, outputFilename string) {
     }
 }
 
+func SaveToPDFFile(image image.Image, outputFilename string) {
+    outputFile, err := os.Create(outputFilename)
+    if err != nil {
+        log.Fatalf("failed to create: %s\n%s\n", outputFilename, err)
+    }
+
+    defer outputFile.Close()
+
+    err = png.Encode(outputFile, image)
+    if err != nil {
+        log.Fatalf("failed to encode: %s\n%s\n", outputFilename, err)
+    }
+}
