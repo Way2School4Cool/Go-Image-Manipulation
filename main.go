@@ -28,17 +28,45 @@ func main() {
         log.Fatal("No filenames given")
     }
 
-    fmt.Println(option)
+    if option == "l" {
+        luminanceImage := manip.LuminanceImage(inputFilename)
 
-    shiftedImage := manip.PerformShift(inputFilename, option)
+        checkpoint = time.Now()
+        fmt.Printf("Generated image in: %v\n", checkpoint.Sub(start))
 
-    checkpoint = time.Now()
-    fmt.Printf("Generated image in: %v\n", checkpoint.Sub(start))
+        SaveToPDFFile(luminanceImage, outputFilename)
 
-    SaveToPDFFile(shiftedImage, outputFilename)
+        checkpoint = time.Now()
+        fmt.Printf("Saved to file in: %v\n", checkpoint.Sub(start))
 
-    checkpoint = time.Now()
-    fmt.Printf("Saved to file in: %v\n", checkpoint.Sub(start))
+    } else if option == "s" {
+        luminanceImage := manip.LuminanceImage(inputFilename)
+
+        checkpoint = time.Now()
+        fmt.Printf("Generated luminance in: %v\n", checkpoint.Sub(start))
+
+        sortedImage := manip.PixelSort(inputFilename, luminanceImage)
+
+        checkpoint = time.Now()
+        fmt.Printf("Generated image in: %v\n", checkpoint.Sub(start))
+
+        SaveToPDFFile(sortedImage, outputFilename)
+
+        checkpoint = time.Now()
+        fmt.Printf("Saved to file in: %v\n", checkpoint.Sub(start))
+
+    } else {
+
+        shiftedImage := manip.PerformShift(inputFilename, option)
+
+        checkpoint = time.Now()
+        fmt.Printf("Generated image in: %v\n", checkpoint.Sub(start))
+
+        SaveToPDFFile(shiftedImage, outputFilename)
+
+        checkpoint = time.Now()
+        fmt.Printf("Saved to file in: %v\n", checkpoint.Sub(start))
+    }
 }
 
 func HelpMenu() {
