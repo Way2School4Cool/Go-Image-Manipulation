@@ -1,12 +1,13 @@
 package manip
 
 import (
-	"fmt"
+	// "fmt"
 	"image"
 	"image/color"
 	"image/png"
 	"log"
 	"os"
+    "math/rand"
     "sort"
 )
 
@@ -145,7 +146,7 @@ func IsWithinLuminanceThreshold(color color.Color) bool {
 
     // fmt.Println(luminance)
 
-    if (luminance >= float32(100.0) && luminance <= float32(200.0)) {
+    if (luminance >= float32(80.0) && luminance <= float32(175.0)) {
         return true
     }
 
@@ -206,31 +207,19 @@ func PixelSort(inputFilename string, luminanceImage image.Image) image.Image {
             luminX++
         }
 
-        // fmt.Println(luminanceEdges)
-
         // for each luminance edge
         for index, value := range luminanceEdges {
             if (index == len(luminanceEdges) - 1) {
                 break
             }
 
-            // fmt.Println(int(value))
-            // fmt.Println(int(luminanceEdges[index]))
-
             var tempXCords []color.Color
 
-            // TODO: This is F'ed
-            // get a snip of the colors in the range from edge x to edge x+1
             for x := int(value); x < int(luminanceEdges[index + 1]); x++ {
                 tempXCords = append(tempXCords, img.At(x, y))
-                // fmt.Print(x)
             }
 
-            // newXCords = SortColorsByLuminance(newXCords)
-
-            // fmt.Println(len(newXCords))
-
-            // fmt.Println(newXCords)
+            // tempXCords = Sort(tempXCords)
 
             sort.Slice(tempXCords, func(i, j int) bool {
                 return Luminance(tempXCords[i]) < Luminance(tempXCords[j])
@@ -241,9 +230,6 @@ func PixelSort(inputFilename string, luminanceImage image.Image) image.Image {
             // fmt.Println(newXCords)
         }
 
-        fmt.Println(len(newXCords))
-        // fmt.Println(img.Bounds().Max.X)
-
         for x := img.Bounds().Min.X; x < img.Bounds().Max.X; x++ {
             // fmt.Println(newXCords[x])
             newImg.Set(x, y, newXCords[x])
@@ -253,38 +239,35 @@ func PixelSort(inputFilename string, luminanceImage image.Image) image.Image {
     return newImg
 }
 
-// func Sort(colorArray []color.Color) []color.Color {
-//     // var newColorArray []color.Color
-//
-//     if len(colorArray) < 2 {
-// 		return colorArray
-// 	}
-//
-// 	// Choose a pivot (you can choose any element, here we choose the first element)
-// 	pivot := colorArray[0]
-//
-// 	// Slices to hold the partitioned elements
-// 	less := []int{}
-// 	greater := []int{}
-//
-// 	// Partition the elements into less and greater slices
-// 	for _, value := range colorArray[1:] {
-// 		if value <= pivot {
-// 			less = append(less, value)
-// 		} else {
-// 			greater = append(greater, value)
-// 		}
-// 	}
-//
-// 	// Recursively sort the less and greater slices and combine them with the pivot
-// 	return append(append(Sort(less), pivot), Sort(greater)...)
-//
-//     // if len(newColorArray) != len(colorArray) {
-//     //     fmt.Println("array size mismatch")
-//     // }
-//     //
-//     // return newColorArray
-// }
+func Sort(colorArray []color.Color) []color.Color {
+    // var newColorArray []color.Color
+
+    if len(colorArray) < 2 {
+		return colorArray
+	}
+
+    // Generate a random number in the range
+    randomNumber := rand.Intn(len(colorArray))
+    
+	// Choose a pivot (you can choose any element, here we choose the first element)
+	pivot := Luminance(colorArray[randomNumber])
+
+	// Slices to hold the partitioned elements
+	less := []color.Color{}
+	greater := []color.Color{}
+
+	// Partition the elements into less and greater slices
+	for _, value := range colorArray[1:] {
+		if Luminance(value) <= pivot {
+			less = append(less, value)
+		} else {
+			greater = append(greater, value)
+		}
+	}
+
+	// Recursively sort the less and greater slices and combine them with the pivot
+	return append(append(Sort(less), colorArray[randomNumber]), Sort(greater)...)
+}
 
 func OverflowCheck(value uint32) uint32 {
     if value < 0 {
