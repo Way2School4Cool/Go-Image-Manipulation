@@ -1,3 +1,8 @@
+/*
+   Example Usage:
+   go run main.go s input.png sorted.png
+*/
+
 package main
 
 import (
