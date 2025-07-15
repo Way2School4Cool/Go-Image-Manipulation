@@ -6,7 +6,8 @@
 package main
 
 import (
-	manip "ImageManipulation/Manip"
+	imageProcessors "ImageManipulation/ImageProcessors"
+	models "ImageManipulation/Models"
 	"fmt"
 	"image"
 	"image/png"
@@ -35,19 +36,19 @@ func main() {
 	}
 
 	switch option {
-	case "l": // Generate Black and White Image based on luminance
-		outputImage = manip.LuminanceImage(inputFilename)
+	case models.MenuOptions.Luminance: // Generate Black and White Image based on luminance
+		outputImage = imageProcessors.LuminanceImage(inputFilename)
 
-	case "s": // Pixel Sorting (Based on luminance)
-		luminanceImage := manip.LuminanceImage(inputFilename)
+	case models.MenuOptions.PixelSort: // Pixel Sorting (Based on luminance)
+		luminanceImage := imageProcessors.LuminanceImage(inputFilename)
 
 		checkpoint = time.Now()
 		fmt.Printf("Generated luminance in: %v\n", checkpoint.Sub(start))
 
-		outputImage = manip.PixelSort(inputFilename, luminanceImage)
+		outputImage = imageProcessors.PixelSort(inputFilename, luminanceImage)
 
 	default: //Perform Shift based on color option
-		outputImage = manip.PerformShift(inputFilename, option)
+		outputImage = imageProcessors.PerformShift(inputFilename, option)
 	}
 
 	checkpoint = time.Now()
